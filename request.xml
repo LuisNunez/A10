@@ -1,0 +1,21 @@
+<?xml version="1.0" standalone="yes"?>
+<IDSentrieServiceReq>
+	<partner_id>A10-account-name</partner_id>
+	<partner_passcode>A10-password</partner_passcode>
+	<service name="IDSentrieUser" version="1.1">
+		<action id="IPIDActivityGet">
+			<!-- Type delta | latest | normal | now -->
+			<type>now</type>
+			<return_attribute_list>
+				<user_hostname/>
+				<server_ip/>
+				<server_hostname/>
+				<domain_name/>
+				<dc_name/>
+				<!-- <user_detail view=uim-view-name/> -->
+			</return_attribute_list>
+			<!-- group_by options username or user_ip-->
+			<group_by>user_ip</group_by>
+		</action>
+	</service>
+</IDSentrieServiceReq>
