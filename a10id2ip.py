@@ -1,36 +1,35 @@
 # This code parses A10 IP to ID log data(XML) files.
-# 
-# 
+#
+#
 # version 0.1.0
-# prototype 
+# prototype
 
-import sys 
+import sys
 import csv
 from lxml import etree, objectify
 from sys import argv
 
 
 def parseXML(xmlFile):
-    #""" test """
-    csvfile = open('a10id2ip.csv','w')
+    csvfile = open('a10id2ip.csv', 'w')
 
-    x = ["user_ip", "username", "time_start", "time_end", "user_hostname", "server_ip", "server_hostname", "domain"]
+    x = ["user_ip", "username", "time_start", "time_end", "user_hostname",
+         "server_ip", "server_hostname", "domain"]
     writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
     writer.writerow(x)
     with open(xmlFile) as f:
         xml = f.read()
- 
+
     root = objectify.fromstring(xml)
- 
     # returns attributes in element node as dict
     attrib = root.attrib
-    
+
     user_ip_count = 0
     user_activity_count = 0
 
     # loop over elements and print tag text.
     for appt in root.service.action.getchildren():
-        ld2ip_out=[]
+        ld2ip_out = []
         for e in appt.getchildren():
             if e.tag == "user_ip":
                 user_ip = e.text
@@ -67,8 +66,8 @@ def parseXML(xmlFile):
     print user_activity_count
 
     csvfile.close()
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 if __name__ == "__main__":
-    #f = r'38116.xml'
+    # f = r'38116.xml'
     f = argv[1]
-    parseXML(f) 
+    parseXML(f)
