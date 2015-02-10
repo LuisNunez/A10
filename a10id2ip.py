@@ -26,6 +26,7 @@ def parseXML(xmlFile):
     attrib = root.attrib
     
     user_ip_count = 0
+    user_activity_count = 0
 
     # loop over elements and print tag text.
     for appt in root.service.action.getchildren():
@@ -58,10 +59,12 @@ def parseXML(xmlFile):
                     if ee.tag == "domain_name":
                         domain_name = ee.text
                         ld2ip_out.append(domain_name)
+                    user_activity_count += 1
                 print ld2ip_out
                 writer.writerow((ld2ip_out))
                 ld2ip_out = []
     print user_ip_count
+    print user_activity_count
 
     csvfile.close()
 #----------------------------------------------------------------------
