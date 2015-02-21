@@ -3,7 +3,7 @@
 
 __author__ = "Luis Nunez"
 __license__ = "GPLv3"
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __maintainer__ = "Luis Nunez"
 __status__ = "Prototype"
 
@@ -13,11 +13,11 @@ import logging
 import sys
 import csv
 from lxml import etree, objectify
-from sys import argv
+# from sys import argv
 
 
 def parseXML(xmlFile):
-    csvfile = open('parseXML - a10_delta_data.csv', 'w')
+    csvfile = open('a10_delta_data.csv', 'w')
     logging.info('Open a10_delta_data.csv for writing')
     x = ["user_ip", "username", "time_start", "time_end", "user_hostname",
          "server_ip", "server_hostname", "domain"]
@@ -65,18 +65,19 @@ def parseXML(xmlFile):
                         domain_name = ee.text
                         ld2ip_out.append(domain_name)
                     user_activity_count += 1
-                #print ld2ip_out
+                # print ld2ip_out
                 writer.writerow((ld2ip_out))
                 ld2ip_out = []
     print user_ip_count
     print user_activity_count
+    logging.info('parse-XML - user_ip_count: %s', user_ip_count)
+    logging.info('parse-XML - user_activity_count: %s', user_activity_count)
 
     csvfile.close()
     logging.info('parse-XML - Closed a10_delta_data.csv')
 
 def build_time():
     A10_time_format = "%Y-%m-%d %H:%M:%S %Z"
-
     current_datetime = datetime.now()
     print current_datetime
     current_year = current_datetime.year
@@ -90,7 +91,6 @@ def build_time():
     diff_day = diff_datetime.day
     diff_hour = diff_datetime.hour
     x = datetime(diff_year, diff_month, diff_day, diff_hour, 00)
-    #d = datetime.strptime(diff_datetime, A10_time_format)
 
     print "current time: %s" % current_datetime
     print "Zulu time: %s" % diff_datetime.isoformat()
@@ -98,18 +98,20 @@ def build_time():
     print "Start time: %s" % diff_datetime.strftime(A10_time_format)+"+0000"
     print "Start request time: %s" % x + " +0000"
     print "End request time: %s" % z + " +0000"
-    #print current_datetime.strftime(A10_time_format)
+    logging.info('build_time - Start time: %s', x)
+    logging.info('build_time - End time: %s', z)
+    # print current_datetime.strftime(A10_time_format)
     xx = str(x)
     zz = str(z)
     logging.info('build_time - end')
-    return (xx,zz)
+    return (xx, zz)
 
 def build_request(TS, TE):
     TZ = " +0000"
     A10xml_begin = """<?xml version="1.0" standalone="yes"?>
     <IDSentrieServiceReq>
-        <partner_id>a10-id</partner_id>
-        <partner_passcode>a10-passwd</partner_passcode>
+        <partner_id>id</partner_id>
+        <partner_passcode>code</partner_passcode>
         <service name="IDSentrieUser" version="1.1">
             <action id="IPIDActivityGet">
                 <!-- Type delta | latest | normal | now -->
@@ -132,20 +134,30 @@ def build_request(TS, TE):
     </IDSentrieServiceReq>"""
     # Build A10 XML request.
     A10xml_request = A10xml_begin + TimeStart + TimeEnd + A10xml_end
-    request_file = open('delta_request1.xml','w')
+    request_file = open('delta_request1.xml', 'w')
     request_file.write(A10xml_request)
-    print A10xml_request
+    # print A10xml_request
     request_file.close
-    logging.info('build_request - End')
+    logging.info('build_request - Done created delta_request1.xml')
 
 def main():
     logging.basicConfig(filename='a10api.log', level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    logging.info('Started')
-    x,z = build_time()
-    f = build_request(x,z)
-    subprocess.call("curl -X POST -d @delta_request1.xml https://x.x.x.x:2393/xml/request -v -k -o delta_request1_data.xml")
-    parseXML('delta_request1_data.xml')
-    logging.info('Finished')
+    logging.info('Start A10 Script')
+    x, z = build_time()
+    f = build_request(x, z)
+    try:
+        subprocess.call("curl -X POST -d @delta_request1.xml https://x.x.x.x:2393/xml/request -v -s -S -k --stderr curl.log -o delta_request1_data.xml")
+        # subprocess.call("curl -X POST -d @delta_request1.xml https://x.x.x.x:2393/xml/request -vv -k -sslv3 -o delta_request1_data.xml")
+    except:
+        print "subprocess call error"
+        logging.exception('subprocess call failed')
+
+    try:
+        parseXML('delta_request1_data.xml')
+        logging.info('Finished A10 Script')
+    except:
+        print "parseXML error check a10api.log for further details"
+        logging.exception('parseXML failed')
 
 if __name__ == "__main__":
     main()
